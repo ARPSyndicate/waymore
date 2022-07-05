@@ -250,7 +250,7 @@ def getConfig():
             
         # Try to get the config file values
         try:        
-            waymorePath = "/~/"
+            waymorePath = "/root"
             #waymorePath = os.path.dirname(os.path.realpath(__file__))""
             if waymorePath == '':
                 configPath = '.waymore-config.yml'
