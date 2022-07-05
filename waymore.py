@@ -250,11 +250,12 @@ def getConfig():
             
         # Try to get the config file values
         try:        
-            waymorePath = os.path.dirname(os.path.realpath(__file__))
+            waymorePath = "/~/"
+            #waymorePath = os.path.dirname(os.path.realpath(__file__))""
             if waymorePath == '':
-                configPath = 'config.yml'
+                configPath = '.waymore-config.yml'
             else:
-                configPath = waymorePath + '/config.yml' 
+                configPath = waymorePath + '/.waymore-config.yml' 
             config = yaml.safe_load(open(configPath))
         
             try:
