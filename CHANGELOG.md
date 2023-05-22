@@ -1,5 +1,162 @@
 ## Changelog
 
+- v1.20
+
+  - New
+
+    - Add argument `-fc` for filtering HTTP status codes. Using this will override the `FILTER_CODE` value from `config.yml`. This is for specifying HTTP status codes you want to exclude from the results, and are provided in a comma separated list.
+    - Add argument `-mc` for matching HTTP status codes. Using this will override the `FILTER_CODE` value from `config.yml` AND the `-fc` argument. This is for specifying HTTP status codes you want to match from the results, and are provided in a comma separated list.
+
+  - Changed
+
+    - Changed how filters are specified in the request to the Common Crawl API. Removes the regex negative lookahead which is not needed if you use `filter=!`
+
+- v1.19
+
+  - Changed
+
+    - Bug fix - ignore any blank lines in the input file when validating if input is in the correct format
+
+- v1.18
+
+  - Changed
+
+    - Cache the Common Crawl `collinfo.json` file locally. The file is only updated a few times per year so there is no point in requesting it every time **waymore** is run. Common Crawl can struggle with volume against it's API which can cause timeouts, and currently, about 10% of all requests they get are for the `collinfo.json`!
+    - Add a HTTPAdapter specifically for Common Crawl to have `retries` and `backoff_factor` increased which seems to reduce the errors and maximize the results found.
+
+- v1.17
+
+  - Changed
+    - If an input file has a sub domain starting with \_ or - then an error was raised, but these are valid. This bug has been fixed.
+    - In addition to the fix above, the error message will show what line was flagged in error so the user can raise an issue on Github about it if they believe it is an error.
+
+- v1.16
+
+  - Changed
+    - Fix a bug that raises `ERROR processURLOutput 6: [Errno 2] No such file or directory: ''` if the value passed to `-oU` has no directory specified as part of the file name.
+
+- v1.15
+
+  - Changed
+    - Fix bug that shows an error when `-v` is passed and `-oU` does not specify a directory, just a filename
+
+- v1.14
+
+  - Changed
+    - Fix a bug with the `-c`/`--config` option
+
+- v1.13
+
+  - New
+
+    - Added argument `-oU`/`--output-urls` to allow the user to specify a filename (including path) for the URL links file when `-mode U` (or `B`oth) is used. If not passed, then the file `waymore.txt` will be created in the `results/{target.domain}` directory as normal. If a path is passed with the file, then any directories will be created. For example: `-oU ~/Recon/Redbull/waymoreUrls.txt`
+    - Added argument `-oR`/`--output-responses` to allow the user to specify a directory (or path) where the archived responses and `index.txt` file is written when `-mode R` (or `B`oth) is used. If any directories in the path do not exist they will be created. For example: `-oR ~/Recon/Redbull/waymoreResponses`
+
+  - Changed
+    - When removing all web archive references in the downloaded archived response, there were a few occasions this wasn't working so the regex has been changed to be more specific to ensure this works.
+
+- v1.12
+
+  - New
+    - Added argument `-c` / `--config` to specify the full path of a YML config file. If not passed, it looks for file `config.yml` in the same directory as runtime file `waymore.py`
+
+- v1.11
+
+  - New
+    - Added argument `-nlf`/`--new-links-file`. If passed, and you run `-mode U` or `-mode B` to get URLs more than once for the same target, the `waymore.txt` will still be appended with new links (unless `-ow` is passed), but a new output file called `waymore.new` will also be written. If there are no new links, the empty file will still be created. This can be used for continuous monitoring of a target.
+    - Added a `waymore` folder containing a new `__init__.py` file that contains the `__version__` value.
+    - Added argument `--verison` to display the current version.
+    - Show better error messages if the archive.org site returns a `Blocked Site Error`.
+  - Changed
+    - If a file of domains is passed as input, make sure spaces are stripped from the lines.
+    - Change `.gitignore` to include `__pycache__`.
+    - Move images to `waymore/images` folder.
+
+- v1.10
+
+  - New
+    - If `-mode U` is run for the same target again, by default new links found will be added to the `waymore.txt` file and duplicates removed.
+    - Added argument `-ow`/`--output-overwrite` that can be passed to force the `waymore.txt` file to be overwritten with newly found links instead of being appended.
+  - Changed
+    - Change the README.md to reflect new changes
+
+- v1.9
+
+  - New
+    - Add functionality to continue downloading archived responses if it does not complete for any reason. When downloading archived responses, a file called `responses.tmp` will be created with the links of all responses that will be downloaded. There will also be a `continueresp.tmp` that will store the index of the current response being saved. If these files exist when run again, the user will be prompted whether to continue a previous run (so new filters will be ignored) or start a new one.
+    - Add `CONTINUE_RESPONSES_IF_PIPED` to `config.yml`. If `stdin` or `stdout` is piped from another process, the user is not prompted whether they want a previous run of downloading responses. This value will determine whether to continue a previous run, or start a new one, in that situation.
+  - Changed
+    - Corrected the total pages shown when getting wayback URLs
+    - Included missing packages in the `requirements.txt` document.
+    - Fix Issue #16 (https://github.com/xnl-h4ck3r/waymore/issues/16)
+
+- v1.8
+
+  - Changed
+    - When archived responses are saved as files, the extension `.xnl` will no longer be used if `-url-filename` is passed. If `-url-filename` is not passed then the filename is represented by a hash value. The extension of these files will be set to `.xnl` only of the original file type cannot be derived from the original URL.
+
+- v1.7
+
+  - New
+    - Added `-xwm` parameter to exclude getting URL's from Wayback Machine (archive.org)
+    - Added `-lr`/`--limit-requests` that can be used to limit the number of requests made per source (excluding Common Crawl) when getting URL's. For example, if you run **waymore** for `-i twitter.com` it says there are 28,903,799 requests to archive.org that need to be made (that could take almost 1000 days for some people!!!). The default value for the argument is 0 (Zero) which will apply no limit as before. There is also an problem with the Wayback Machine CDX API where the number of pages returned is not correct when filters are applied and can cause issues. Setting this parameter to a sensible value can relieve that issue (it may take a while for archive.org to address the problem).
+  - Changed
+    - Make sure that filters in API URL's are escaped correctly
+    - Add error handling to `getMemory()` to avoid any errors if `psutil` is not installed
+
+- v1.6
+
+  - New
+    - Add a docker option to run `waymore`. Include instructions in `README.md` and a new `DockerFile`
+  - Changed
+    - If multiple domain/URLs are passed by file or STDIN, remove `*.` from the start of any input values.
+    - Change the default `FILTER_KEYWORDS` to include more useful words.
+    - If a link found from an API has port 80 or 443 specified, e.g. `https://exmaple.com:80/example` then remove the `:80`. Many links have this in archive.org so this could reduce the number of similar links reported.
+    - Amend `setup.py` to include `urlparse3` that is now used to get the domain and port of links found
+
+- v1.5
+
+  - New
+    - Add argument `-ko`/`--keywords-only` which if passed, will only get Links (unless `-f` is passed) that have a specified keyword in the URL, and will only download responses (regardless of `-f`) where the keyword is in the URL. These multiple keywords can be specified in `config.yml` in a comma separated list.
+    - Add a `FILTER_KEYWORDS` key/pair to `config.yml` (and default value in code) initially set to `admin,login,logon,signin,register,dashboard,portal,ftp,cpanel`
+  - Changed
+    - Only add to the MIME type list if the `-v` option is used because they are not displayed otherwise.
+    - Warn the user if there is a value missing from the config.yml file
+    - Fixed small bug in `getURLScanUrls` that raised an error for `getSPACER`
+
+- v1.4
+
+  - New
+    - Added `-m /--memory-threshold` argument to set memory threshold percentage. If the machines memory goes above the threshold, the program will be stopped and ended gracefully before running out of memory (default: 95)
+    - If `-v` verbose output was used, memory stats will be output at the end, and also shown on teh progress bar downloading responses.
+    - Included `psutil` in `setup.py`
+  - Changed
+    - Fix some display issues not completely done in v1.3, regarding trailing spaces when errors are displayed.
+    - Remove line `os.kill(os.getpid(),SIGINT)` from `processArchiveUrl` which isn't needed and just causes more error if a user does press Ctrl-C.
+
+- v1.3
+
+  - New
+    - Added functionality to allow output Links output to be piped to another program (the output file will still be written). Errors and progress bar are written to STDERR. No information about archived responses will be piped.
+    - Added functionality to allow input to be piped to waymore. This will be the same as passing to `-i` argument.
+  - Changed
+    - Use a better way to add trailing spaces to strings to cover up other strings (like progress bar), regardless of terminal width.
+    - Change the README to mention `-xus` argument and how to get a URLScan API key to add to the config file.
+
+- v1.2
+
+  - Changed
+    - Removed User-Agent `Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1` because it caused problems on some domains in `xnLinkFinder` tool, so removing from here too.
+    - Base the length of the progress bar (show when downloading archived responses) on the width of the terminal so it displays better and you don't get multiple lines on smaller windows.
+    - Amend `.gitignore` to include other unwanted files
+
+- v1.1
+
+  - New
+    - Allow a file of domains/URL's to be passed as input with `-i` instead of just one.
+  - Changed
+    - Remove version numbers from `requirements.txt` as these aren't really needed and may cause some issues.
+
 - v1.0
 
   - New
