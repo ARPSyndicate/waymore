@@ -2,3 +2,6 @@ argparse
 requests
 pyyaml
 termcolor
+setuptools
+psutil
+urlparse3
