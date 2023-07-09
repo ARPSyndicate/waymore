@@ -1,5 +1,35 @@
 ## Changelog
 
+- v1.25
+
+  - Changed
+
+    - Fix a bug that always strips the port number from URLs found. It should only remove the port if it is :80 or :443
+
+- v1.24
+
+  - Changed
+
+    - Handle errors with the config file better. Display specific message to say if the file isn't found or if there is a formatting error. If there is any other kind of error, the error message will be displayed. THe default values will be used in the case of any of these errors.
+
+- v1.23
+
+  - Changed
+
+    - The `-ko`/`--keywords-only` argument can now be passed without a value, which will use the `FILTER_KEYWORDS` in `config.yml` as before, or passed with a Regex value that will be used instead. For example, `-ko "admin"` to only get links containing the word `admin`, or `-ko "\.js(\?\|$)"` to only get JS files. The Regex check is NOT case sensitive.
+
+- v1.22
+
+  - Changed
+
+    - Fix issue https://github.com/xnl-h4ck3r/waymore/issues/23. If a file is passed as input, an error would occur if any of the domains in the file contained a capital letter or ended with a full stop. The regex in `validateArgInput` has been amended to fix this, adn any `.` on the end of a domain is stripped and domain converted to lowercase before processing.
+
+- v1.21
+
+  - Changed
+
+    - Fix issue https://github.com/xnl-h4ck3r/waymore/issues/24. If the `FILTER_CODE` in `config.yml` is set to one status code then it is needs to be explicitly set to a string in `getConfig()`
+
 - v1.20
 
   - New
