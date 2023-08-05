@@ -817,9 +817,9 @@ def processURLOutput():
         appendedUrls = False
         if not args.output_overwrite:
             try:
-                existingLinks = open(filename,'r',)
-                for link in existingLinks.readlines():
-                    linksFound.add(link.strip())
+                with open(filename,'r') as existingLinks:
+                    for link in existingLinks.readlines():
+                        linksFound.add(link.strip())
                 appendedUrls = True
             except Exception as e:
                 pass
@@ -971,8 +971,8 @@ def validateArgInput(x):
         if os.path.isfile(x):
             isInputFile = True
             # Open file and put all values in input list
-            inputFile = open(x, 'r')
-            lines = inputFile.readlines()          
+            with open(x, 'r') as inputFile:
+                lines = inputFile.readlines()          
             # Check if any lines start with a *. and replace without the *.
             for line in lines:
                 inputValues.add(line.lstrip('*.'))
@@ -2268,8 +2268,8 @@ if __name__ == '__main__':
         '-lcc',
         action='store',
         type=int,
-        help='Limit the number of Common Crawl index collections searched, e.g. \'-lcc 10\' will just search the latest 10 collections. As of June 2022 there are currently 88 collections. Setting to 0 (default) will search ALL collections. If you don\'t want to search Common Crawl at all, use the -xcc option.',
-        default=0
+        help='Limit the number of Common Crawl index collections searched, e.g. \'-lcc 10\' will just search the latest 10 collections (default: 3). As of July 2023 there are currently 95 collections. Setting to 0 (default) will search ALL collections. If you don\'t want to search Common Crawl at all, use the -xcc option.',
+        default=3
     )
     parser.add_argument(
         '-t',
