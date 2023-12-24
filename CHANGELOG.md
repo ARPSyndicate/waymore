@@ -1,5 +1,97 @@
 ## Changelog
 
+- v2.0
+
+  - New
+
+    - Add VirusTotal as a source for URLs. We will get URLs from the v2 API domain report. This can include sub domains, detected URLs, and undetected URLs in the response. It does not give you the status code or MIME type of the links, so we will just check against extension.
+    - Show a specific message for Wayback Machine if there is a Connection Refused error. This happens when they have blocked the users IP.
+    - Add some pointless celebration messages to the banner for a few different dates!
+
+- v1.37
+
+  - New
+
+    - Add argument `-co`/`--check-only`. If passed, then it will just get the count of requests that need to be made to get URLs from the sources, and how many archived responses will be downloaded. It will try to give an idea of the time the tool could take with the settings given.
+
+- v1.36
+
+  - New
+
+    - Add argument `-wrlr`/`--wayback-rate-limit-retry` which is the number of minutes the user wants to wait for a rate limit pause on Wayback Machine (archive.org) instead of stopping with a `429` error. This defaults to 3 minutes which is a time that seems to work for a while after.
+    - Add some additional User-Agents to use when making requests to the API providers.
+    - Add new MIME exclusions `video/x-ms-wmv`,`image/x-png`,`video/quicktime`,`image/x-ms-bmp`,`font/opentype`,`application/x-font-opentype`,`application/x-woff` and `audio/aiff`.
+
+  - Changed
+
+    - Change the default `-p`/`--processes` to 1 instead of 3. This is to help with the rate limiting now put in place by web.archive.org. If set to 1 we can also ensure that the pages are processed in order and save where we stopped.
+    - Change the `backoff_factor` on `HTTP_ADAPTER` from 1 to 1.1 to help with the rate limiting now put in place by web.archive.org.
+    - Change the `pages` set to a list to ensure pages are processed in order (only does if `--processes` is 1).
+
+- v1.35
+
+  - New
+
+    - I had a specific problem with my ISP blocking archive.org for adult content (!) which resulted in a large and confusing error message. This has been replaced by a more useful message if this happens for anyone else.
+
+- v1.34
+
+  - Changed
+
+    - Any scheme, port number, query string, or URL fragment will be removed from the input values.
+    - Only show the warning `No value for "URLSCAN_API_KEY" in config.yml - consider adding (you can get a FREE api key at urlscan.io)` if the `-xus` argument wasn't passed.
+    - If the input has a domain AND path, then it will still be searched for links, and the mode will not be forced to R.
+    - When input value is validated and `<stdin>` is used, just assume one line is a domain/url, and multiple lines are treated as a file (so the correct description is shown).
+
+- v1.33
+
+  - Changed
+
+    - A bug existed that would cause any site that had only had one page of links to not be completely retrieved. Change the processing for Wayback Machine that gets the number of pages. If the total number of pages is 1, then don't pass page number at all.
+    - In the `getSPACER` function, add 5 to the length instead of taking 1 away, to text artifacts aren't left.
+
+- v1.32
+
+  - Changed
+
+    - Changes to prevent `SyntaxWarning: invalid escape sequence` errors when Python 3.12 is used.
+
+- v1.31
+
+  - New
+
+    - Add new argument `-urlr`/`--urlscan-rate-limit-retry` to pass the number of minutes that you want to wait between each rate-limit pause from URLScan.
+    - Add new MIME exclusions `application/x-msdownload` and `application/x-ms-application`.
+
+  - Changed
+
+    - When getting URLs from the results of URLScsn, also get the `[task][url]` values. Thanks to @Ali45598547 for highlighting this!
+    - When the URLScan rate limits, it says how many seconds you need to wait until you can try again. If less than 1 minute, the program will wait automatically to get more results. If more than 1 minute, then the code will wait for the length of time specified by the `-urlr`/`--urlscan-rate-limit-retry` argument, if passed.
+    - For CommonCrawl, do at least 20 retires. This helps reduce the problem of `503`` errors and doing many retries was suggested by CommonCrawl them selves to deal with the problem.
+
+- v1.30
+
+  - Changed
+
+    - If there any `+` in the MIME types, e.g. `image/svg+xml`, then replace the `+` with a `.` otherwise the wayback API does not recognise it.
+    - Add `application/font-otf` to the `FILTER_MIME` value in `config.yml`.
+
+- v1.29
+
+  - New
+
+    - Check for specific text in response code of 503 (which usually means the site is down for maintenance or not available) and return a specific message instead of the full response.
+
+- v1.28
+
+  - New
+
+    - Added `application/font-otf` to `DEFAULT_FILTER_MIME`
+
+  - Changed
+
+    - Fix a bug that overwrites the output URLs file if the input is a file that contains different hosts.
+
 - v1.27
 
   - Changed
