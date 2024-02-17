@@ -120,7 +120,7 @@ DEFAULT_FILTER_MIME = 'text/css,image/jpeg,image/jpg,image/png,image/svg+xml,ima
 DEFAULT_FILTER_CODE = '404,301,302'
 
 # Keywords 
-DEFAULT_FILTER_KEYWORDS = 'admin,login,logon,signin,register,dashboard,portal,ftp,cpanel,panel,.js,api,robots.txt,graph,gql'
+DEFAULT_FILTER_KEYWORDS = 'admin,login,logon,signin,signup,register,registration,dash,portal,ftp,panel,.js,api,robots.txt,graph,gql,config,backup,debug,db,database,git,cgi-bin,swagger,zip,rar,tar.gz,internal,jira,jenkins,confluence,atlassian,okta,corp,upload,delete,email,sql,create,edit,test,temp,cache,wsdl,log,payment,setting,mail,file,redirect,chat,billing,doc,trace,cp,ftp,gateway,import,proxy,dev,stage,stg,uat'
 
 # Yaml config values
 FILTER_URL = ''
@@ -210,11 +210,11 @@ def showBanner():
     write(colored("            (____/ ","red")+colored("  by Xnl-h4ck3r ","magenta")+r" \_____)")
     try:
         currentDate = datetime.now().date()
-        if currentDate.month == 12 and currentDate.day == 25:
+        if currentDate.month == 12 and currentDate.day in (24,25):
             write(colored("            *** 🎅 HAPPY CHRISTMAS! 🎅 ***","green",attrs=["blink"]))
         elif currentDate.month == 10 and currentDate.day == 31:
             write(colored("            *** 🎃 HAPPY HALLOWEEN! 🎃 ***","red",attrs=["blink"]))
-        elif currentDate.month == 1 and currentDate.day == 1:
+        elif currentDate.month == 1 and currentDate.day in  (1,2,3,4,5):
             write(colored("            *** 🥳 HAPPY NEW YEAR!! 🥳 ***","yellow",attrs=["blink"]))
     except:
         pass
@@ -284,10 +284,15 @@ def showOptions():
         write(colored('-xwm: ' +str(args.xwm), 'magenta')+colored(' Whether to exclude checks for links from Wayback Machine (archive.org)','white'))    
         write(colored('-xcc: ' +str(args.xcc), 'magenta')+colored(' Whether to exclude checks for links from commoncrawl.org','white'))
         if not args.xcc:
-            if args.lcc == 0:
+            if args.lcc ==0 and args.lcy == 0:
                 write(colored('-lcc: ' +str(args.lcc), 'magenta')+colored(' Search ALL Common Crawl index collections.','white'))
             else:
-                write(colored('-lcc: ' +str(args.lcc), 'magenta')+colored(' The number of latest Common Crawl index collections to be searched.','white'))
+                if args.lcy == 0:
+                    write(colored('-lcc: ' +str(args.lcc), 'magenta')+colored(' The number of latest Common Crawl index collections to be searched.','white'))
+                else:
+                    if args.lcc != 0:
+                        write(colored('-lcc: ' +str(args.lcc), 'magenta')+colored(' The number of latest Common Crawl index collections to be searched.','white'))
+                    write(colored('-lcy: ' +str(args.lcy), 'magenta')+colored(' Search all Common Crawl index collections with data from year '+str(args.lcy)+' and after.','white'))
         write(colored('-xav: ' +str(args.xav), 'magenta')+colored(' Whether to exclude checks for links from alienvault.com','white'))
         write(colored('-xus: ' +str(args.xus), 'magenta')+colored(' Whether to exclude checks for links from urlscan.io','white'))
         if URLSCAN_API_KEY == '':
@@ -415,7 +420,7 @@ def getConfig():
             retry= Retry(
                 total=args.retries+20,
                 backoff_factor=1.1,
-                status_forcelist=[429, 500, 502, 503, 504],
+                status_forcelist=[503],
                 raise_on_status=False,
                 respect_retry_after_header=False
             )
@@ -678,7 +683,10 @@ def processArchiveUrl(url):
                         archiveHtml = re.sub(r'((https:)?\\\/\\\/web\.archive\.org)?\\\/web\\\/[0-9]{14}([A-Za-z]{2}\_)?\\\/','',archiveHtml,flags=re.IGNORECASE)
                         archiveHtml = re.sub(r'((https:)?%2F%2Fweb\.archive\.org)?%2Fweb%2F[0-9]{14}([A-Za-z]{2}\_)?%2F','',archiveHtml,flags=re.IGNORECASE)
                         archiveHtml = re.sub(r'((https:)?\\u002F\\u002Fweb\.archive\.org)?\\u002Fweb\\u002F[0-9]{14}([A-Za-z]{2}\_)?\\u002F','',archiveHtml,flags=re.IGNORECASE)
-                       
+                        archiveHtml = re.sub(r'\<script type=\"text\/javascript\">\s*__wm\.init\(\"https:\/\/web\.archive\.org\/web\"\);[^\<]*\<\/script\>','',archiveHtml,flags=re.IGNORECASE)
+                        archiveHtml = re.sub(r'\<script type=\"text\/javascript\" src="https:\/\/web-static\.archive\.org[^\<]*\<\/script\>','',archiveHtml,flags=re.IGNORECASE)
+                        archiveHtml = re.sub(r'\<link rel=\"stylesheet\" type=\"text\/css\" href=\"https:\/\/web-static\.archive\.org[^\<]*\/\>','',archiveHtml,flags=re.IGNORECASE)
+                        
                         # If there is a specific Wayback error in the response, raise an exception 
                         if archiveHtml.lower().find('wayback machine has not archived that url') > 0 or archiveHtml.lower().find('snapshot cannot be displayed due to an internal error') > 0:
                             raise WayBackException
@@ -1940,7 +1948,15 @@ def getCommonCrawlIndexes():
         for values in json.loads(jsonResp):
             for key in values:
                 if key == 'cdx-api':
-                    cdxApiUrls.add(values[key])
+                    if args.lcy != 0:
+                        try:
+                            indexYear = values[key].split("CC-MAIN-")[1][:4]
+                            if int(indexYear) >= args.lcy:
+                                cdxApiUrls.add(values[key])
+                        except Exception as e:
+                            writerr(colored(getSPACER('[ ERR ] Failed to get the year from index name ' + values[key] + ' - ' + str(e)),'red'))
+                    else:
+                        cdxApiUrls.add(values[key])
             collection = collection + 1
             if collection == args.lcc: break
                     
@@ -2632,8 +2648,14 @@ if __name__ == '__main__':
         '-lcc',
         action='store',
         type=int,
-        help='Limit the number of Common Crawl index collections searched, e.g. \'-lcc 10\' will just search the latest 10 collections (default: 3). As of July 2023 there are currently 95 collections. Setting to 0 (default) will search ALL collections. If you don\'t want to search Common Crawl at all, use the -xcc option.',
-        default=3
+        help='Limit the number of Common Crawl index collections searched, e.g. \'-lcc 10\' will just search the latest 10 collections (default: 3). As of July 2023 there are currently 95 collections. Setting to 0 (default) will search ALL collections. If you don\'t want to search Common Crawl at all, use the -xcc option.'
+    )
+    parser.add_argument(
+        '-lcy',
+        action='store',
+        type=int,
+        help='Limit the number of Common Crawl index collections searched by the year of the index data. The earliest index has data from 2008. Setting to 0 (default) will search collections or any year (but in conjuction with -lcc). For example, if you are only interested in data from 2015 and after, pass -lcy 2015. If you don\'t want to search Common Crawl at all, use the -xcc option.',
+        default=0
     )
     parser.add_argument(
         '-t',
@@ -2732,7 +2754,14 @@ if __name__ == '__main__':
     if args.version:
         write(colored('Waymore - v' + __import__('waymore').__version__,'cyan'))
         sys.exit()
-        
+    
+    # If -lcc wasn't passed then set to the default of 3 if -lcy is 0. This will make them work together
+    if args.lcc is None:
+        if args.lcy == 0:
+            args.lcc = 3
+        else:
+            args.lcc = 0
+    
     # If no input was given, raise an error
     if sys.stdin.isatty():
         if args.input is None:
